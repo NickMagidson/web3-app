@@ -12,45 +12,83 @@ const getEthereumContract = () => {
   const signer = provider.getSigner();
   const TransactionContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-  console.log({
-    provider,
-    signer,
-    TransactionContract
-  });
+  return TransactionContract();
 }
 
-export const TransactionProvider = ({ children }) => {
 
-  const [connectedAccount, setConnectedAccount] = useState('');
+export const TransactionProvider = ({ children }) => {
+  const [currentAccount, setCurrentAccount] = useState('');
+  const [formData, setFormData] = useState({ addressTo: '', amount: '', keyword: '', message: '' });
+
+  const handleChange = (e, name) => {
+    setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
+  }
 
   const checkIfWalletIsConnected = async () => {
-    if(!ethereum) return alert("Please install metamask");
+    try {
+      if(!ethereum) return alert("Please install metamask");
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
 
-    const accounts = await ethereum.request({ method: 'eth_accounts' });
+      if(accounts.length) { 
+        setCurrentAccount(accounts[0]);
 
-    console.log(accounts)
+        // getAllTransactions();
+      } else {
+        console.log('No accounts found')
+      }
+    } catch (error) {
+      console.log(error);
+      throw new Error("No ethereum object.")
+    }
   }
+
 
   const connectWallet = async () => {
     try {
       if(!ethereum) return alert("Please install metamask");
-
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-
-      setConnectedAccount(accounts[0]);
+      setCurrentAccount(accounts[0]);
+      
     } catch (error) {
       console.log(error);
-
       throw new Error("No ethereum object.")
     }
   }
+
+
+  const sendTransaction = async () => {
+    try {
+      if(!ethereum) return alert("Please install metamask");
+
+      const { addressTo, amount, keyword, message } = formData;
+      const transactionContract = getEthereumContract();
+      const parsedAmount = ethers.utils.parseEther(amount);
+      
+      await ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: currentAccount,
+          to: addressTo,
+          gas: '0x5208', // 21000 GEWI
+          value: parsedAmount._hex, // 0.00001
+        }]
+      })
+
+
+    } catch (error) {
+      console.log(error);
+      throw new Error("No ethereum object.")
+    }
+  }
+
 
   useEffect(() => {
     checkIfWalletIsConnected();
   }, [])
  
+
   return (
-    <TransactionContext.Provider value={{ connectWallet }}>
+    <TransactionContext.Provider value={{ connectWallet, currentAccount, formData, setFormData, handleChange, sendTransaction }}>
       {children}
     </TransactionContext.Provider>
   )
