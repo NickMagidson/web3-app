@@ -20,7 +20,7 @@ export const TransactionProvider = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [formData, setFormData] = useState({ addressTo: '', amount: '', keyword: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [transactionCount, setTransactionCount] = useState(localStorage.getItem('transactionCount'));
+  const [transactionCount, setTransactionCount] = useState(localStorage.getItem("transactionCount"));
   const [transactions, setTransactions] = useState([]);
 
   const handleChange = (e, name) => {
@@ -137,7 +137,7 @@ export const TransactionProvider = ({ children }) => {
   useEffect(() => {
     checkIfWalletIsConnected();
     checkIfTransactionsExist();
-  }, [])
+  }, [transactionCount])
  
 
   return (
